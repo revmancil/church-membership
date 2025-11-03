@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Church Membership System</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial; background: #1a1a1a; padding: 20px; }
+.box { max-width: 500px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; }
+h2 { color: #1a472a; text-align: center; margin-bottom: 20px; }
+.form-group { margin: 15px 0; }
+label { display: block; font-weight: bold; margin-bottom: 5px; }
+input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+button { width: 100%; padding: 10px; margin-top: 10px; background: #1a472a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+button:hover { background: #2d6a3f; }
+.hidden { display: none; }
+.app { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+.header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1a472a; padding-bottom: 20px; margin-bottom: 20px; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+.tab { padding: 10px 20px; cursor: pointer; background: transparent; border: none; color: #666; font-weight: bold; }
+.tab.active { color: #1a472a; border-bottom: 3px solid #1a472a; }
+.card { background: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 4px; }
+.member { display: flex; justify-content: space-between; padding: 15px; background: white; margin: 10px 0; border-left: 4px solid #1a472a; border-radius: 4px; }
+.member-info { flex: 1; }
+.member-info h4 { color: #1a472a; margin-bottom: 5px; }
+.member-info p { font-size: 12px; color: #666; line-height: 1.4; }
+.btn-group { display: flex; gap: 5px; }
+.btn-small { padding: 6px 12px; font-size: 12px; width: auto; margin: 0; }
+.btn-delete { background: #dc3545; }
+.btn-delete:hover { background: #c82333; }
+.btn-view { background: #007bff; }
+.btn-view:hover { background: #0056b3; }
+.btn-export { background: #28a745; }
+.btn-export:hover { background: #218838; }
+.stat { display: inline-block; width: 23%; text-align: center; padding: 15px; background: #f0f0f0; margin: 1%; border-radius: 4px; }
+.stat-num { font-size: 24px; font-weight: bold; color: #1a472a; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.checkin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 20px 0; }
+.checkin-card { padding: 15px; background: #f0f0f0; text-align: center; border-radius: 4px; cursor: pointer; border: 2px solid transparent; }
+.checkin-card.checked { background: #d4edda; border-color: #28a745; }
+</style>
+</head>
+<body>
+
+<div id="login" class="box">
+<h2>⛪ Church Membership System</h2>
+<div id="loginView">
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="email1" placeholder="pastor@church.com">
+</div>
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="pass1" placeholder="Password">
+</div>
+<button onclick="handleLogin()">Login</button>
+<button onclick="switchToSignup()" style="background: #666;">Sign Up</button>
+</div>
+
+<div id="signupView" class="hidden">
+<div class="form-group">
+<label>Church Name</label>
+<input type="text" id="church" placeholder="Your Church">
+</div>
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="email2" placeholder="pastor@church.com">
+</div>
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="pass2" placeholder="Password">
+</div>
+<button onclick="handleSignup()">Create Account</button>
+<button onclick="switchToLogin()" style="background: #666;">Back</button>
+</div>
+</div>
+
+<div id="app" class="app hidden">
+<div class="header">
+<h1>⛪ Church Membership</h1>
+<div>
+<span>Church: <strong id="cname">My Church</strong></span>
+<button onclick="handleLogout()" style="width: 120px; margin-left: 20px;">Logout</button>
+</div>
+</div>
+
+<div class="tabs">
+<button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
+<button class="tab" onclick="showTab('members')">Members</button>
+<button class="tab" onclick="showTab('checkin')">Check-In</button>
+<button class="tab" onclick="showTab('reports')">Reports</button>
+</div>
+
+<!-- DASHBOARD TAB -->
+<div id="dashboard" class="tab-content">
+<div>
+<div class="stat">
+<div class="stat-num" id="stat1">0</div>
+<div>Total Members</div>
+</div>
+<div class="stat">
+<div class="stat-num" id="stat2">0</div>
+<div>Attended This Week</div>
+</div>
+<div class="stat">
+<div class="stat-num" id="stat3">0</div>
+<div>Visitors</div>
+</div>
+<div class="stat">
+<div class="stat-num" id="stat4">0%</div>
+<div>Attendance Rate</div>
+</div>
+</div>
+<div class="card">
+<h3>Recent Members</h3>
+<div id="recentMembers"></div>
+</div>
+</div>
+
+<!-- MEMBERS TAB -->
+<div id="members" class="tab-content hidden">
+<div class="card">
+<h3>Add New Member</h3>
+<div class="form-row">
+<div class="form-group">
+<label>First Name</label>
+<input type="text" id="fname">
+</div>
+<div class="form-group">
+<label>Last Name</label>
+<input type="text" id="lname">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="memail">
+</div>
+<div class="form-group">
+<label>Phone</label>
+<input type="tel" id="phone">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Address</label>
+<input type="text" id="address">
+</div>
+<div class="form-group">
+<label>Role</label>
+<select id="role">
+<option value="Member">Member</option>
+<option value="Visitor">Visitor</option>
+<option value="Leader">Leader</option>
+<option value="Staff">Staff</option>
+</select>
+</div>
+</div>
+<button onclick="addMember()" style="width: 100%;">Add Member</button>
+</div>
+
+<div class="card">
+<h3>Member Directory</h3>
+<input type="text" id="search" placeholder="Search..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+<button onclick="exportToCSV()" class="btn-export" style="margin-bottom: 15px;">Download CSV</button>
+<div id="membersList"></div>
+</div>
+</div>
+
+<!-- CHECK-IN TAB -->
+<div id="checkin" class="tab-content hidden">
+<div class="card">
+<h3>Sunday Service Check-In</h3>
+<div class="form-group">
+<label>Service Date</label>
+<input type="date" id="serviceDate">
+</div>
+<div class="checkin-grid" id="checkinGrid"></div>
+<button onclick="saveCheckin()" style="width: 100%; margin-top: 20px;">Save Check-In</button>
+</div>
+</div>
+
+<!-- REPORTS TAB -->
+<div id="reports" class="tab-content hidden">
+<div class="card">
+<h3>Attendance Report</h3>
+<table style="width: 100%; border-collapse: collapse;">
+<thead>
+<tr style="background: #f0f0f0; border-bottom: 2px solid #ddd;">
+<th style="padding: 12px; text-align: left;">Member</th>
+<th style="padding: 12px; text-align: center;">Services Attended</th>
+<th style="padding: 12px; text-align: center;">Attendance %</th>
+</tr>
+</thead>
+<tbody id="reportTable">
+<tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No data</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+var members = [];
+var attendance = {};
+var church = "My Church";
+var currentServiceDate = new Date().toISOString().split('T')[0];
+
+document.getElementById('serviceDate').valueAsDate = new Date();
+
+function switchToSignup() {
+  document.getElementById("loginView").style.display = "none";
+  document.getElementById("signupView").style.display = "block";
+}
+
+function switchToLogin() {
+  document.getElementById("loginView").style.display = "block";
+  document.getElementById("signupView").style.display = "none";
+}
+
+function handleLogin() {
+  var e = document.getElementById("email1").value;
+  var p = document.getElementById("pass1").value;
+  if(e && p) {
+    church = "Church - " + e.split("@")[0];
+    showApp();
+  } else {
+    alert("Enter email and password");
+  }
+}
+
+function handleSignup() {
+  var c = document.getElementById("church").value;
+  var e = document.getElementById("email2").value;
+  var p = document.getElementById("pass2").value;
+  if(c && e && p) {
+    church = c;
+    showApp();
+  } else {
+    alert("Fill all fields");
+  }
+}
+
+function showApp() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  document.getElementById("cname").textContent = church;
+  updateDashboard();
+  updateMembers();
+}
+
+function handleLogout() {
+  members = [];
+  attendance = {};
+  document.getElementById("login").style.display = "block";
+  document.getElementById("app").style.display = "none";
+  document.getElementById("loginView").style.display = "block";
+  document.getElementById("signupView").style.display = "none";
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(function(el) {
+    el.style.display = 'none';
+  });
+  document.querySelectorAll('.tab').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  document.getElementById(tab).style.display = 'block';
+  event.target.classList.add('active');
+  
+  if(tab === 'checkin') loadCheckinGrid();
+  if(tab === 'reports') loadReports();
+}
+
+function addMember() {
+  var fn = document.getElementById("fname").value;
+  var ln = document.getElementById("lname").value;
+  var e = document.getElementById("memail").value;
+  var ph = document.getElementById("phone").value;
+  var addr = document.getElementById("address").value;
+  var r = document.getElementById("role").value;
+  
+  if(!fn || !ln) {
+    alert("Enter name");
+    return;
+  }
+  
+  var member = {
+    id: Date.now(),
+    fname: fn,
+    lname: ln,
+    email: e,
+    phone: ph,
+    address: addr,
+    role: r,
+    joinDate: new Date().toLocaleDateString()
+  };
+  
+  members.push(member);
+  
+  document.getElementById("fname").value = "";
+  document.getElementById("lname").value = "";
+  document.getElementById("memail").value = "";
+  document.getElementById("phone").value = "";
+  document.getElementById("address").value = "";
+  document.getElementById("role").value = "Member";
+  
+  updateMembers();
+  updateDashboard();
+  alert("Member added!");
+}
+
+function deleteMember(id) {
+  if(confirm("Delete?")) {
+    members = members.filter(function(m) { return m.id != id; });
+    updateMembers();
+    updateDashboard();
+  }
+}
+
+function updateMembers() {
+  var s = document.getElementById("search").value.toLowerCase();
+  var f = members.filter(function(m) {
+    return m.fname.toLowerCase().indexOf(s) > -1 || m.lname.toLowerCase().indexOf(s) > -1;
+  });
+  
+  var html = "";
+  for(var i = 0; i < f.length; i++) {
+    var m = f[i];
+    html += "<div class='member'><div class='member-info'>";
+    html += "<h4>" + m.fname + " " + m.lname + "</h4>";
+    html += "<p><strong>Email:</strong> " + m.email + "</p>";
+    html += "<p><strong>Phone:</strong> " + m.phone + "</p>";
+    html += "<p><strong>Address:</strong> " + m.address + "</p>";
+    html += "<p><strong>Role:</strong> " + m.role + " | <strong>Joined:</strong> " + m.joinDate + "</p>";
+    html += "</div><div class='btn-group'>";
+    html += "<button class='btn-small btn-delete' onclick='deleteMember(" + m.id + ")'>Delete</button>";
+    html += "</div></div>";
+  }
+  
+  if(html === "") html = "<p>No members</p>";
+  document.getElementById("membersList").innerHTML = html;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("search").addEventListener("keyup", updateMembers);
+});
+
+function updateDashboard() {
+  document.getElementById("stat1").textContent = members.length;
+  
+  var attended = 0;
+  for(var key in attendance) {
+    if(attendance[key]) attended++;
+  }
+  document.getElementById("stat2").textContent = attended;
+  
+  var visitors = members.filter(function(m) { return m.role === 'Visitor'; }).length;
+  document.getElementById("stat3").textContent = visitors;
+  
+  var rate = members.length > 0 ? Math.round((attended / members.length) * 100) : 0;
+  document.getElementById("stat4").textContent = rate + "%";
+  
+  var recent = members.slice(-3).reverse().map(function(m) {
+    return "<div class='member'><div class='member-info'><h4>" + m.fname + " " + m.lname + "</h4><p>" + m.role + " - Joined " + m.joinDate + "</p></div></div>";
+  }).join('');
+  document.getElementById("recentMembers").innerHTML = recent || "<p>No members</p>";
+}
+
+function loadCheckinGrid() {
+  var date = document.getElementById("serviceDate").value;
+  var html = "";
+  for(var i = 0; i < members.length; i++) {
+    var m = members[i];
+    var key = m.id + "_" + date;
+    var checked = attendance[key] ? "checked" : "";
+    html += "<div class='checkin-card " + checked + "' onclick='toggleCheckin(" + m.id + ")'>";
+    html += "<strong>" + m.fname + " " + m.lname + "</strong><br>";
+    html += checked ? "✓ Present" : "Mark present";
+    html += "</div>";
+  }
+  if(html === "") html = "<p>No members</p>";
+  document.getElementById("checkinGrid").innerHTML = html;
+}
+
+function toggleCheckin(id) {
+  var date = document.getElementById("serviceDate").value;
+  var key = id + "_" + date;
+  attendance[key] = !attendance[key];
+  loadCheckinGrid();
+}
+
+function saveCheckin() {
+  var date = document.getElementById("serviceDate").value;
+  var count = 0;
+  for(var key in attendance) {
+    if(key.endsWith("_" + date) && attendance[key]) count++;
+  }
+  alert("Check-in saved! " + count + " present");
+}
+
+function loadReports() {
+  var html = "";
+  for(var i = 0; i < members.length; i++) {
+    var m = members[i];
+    var attended = 0;
+    for(var key in attendance) {
+      if(key.startsWith(m.id + "_") && attendance[key]) attended++;
+    }
+    html += "<tr><td style='padding: 12px;'>" + m.fname + " " + m.lname + "</td>";
+    html += "<td style='padding: 12px; text-align: center;'>" + attended + "</td>";
+    html += "<td style='padding: 12px; text-align: center;'>-</td></tr>";
+  }
+  if(html === "") html = "<tr><td colspan='3' style='padding: 20px; text-align: center; color: #999;'>No data</td></tr>";
+  document.getElementById("reportTable").innerHTML = html;
+}
+
+function exportToCSV() {
+  if(members.length === 0) {
+    alert("No members to export");
+    return;
+  }
+  
+  try {
+    var csv = "First Name,Last Name,Email,Phone,Address,Role,Join Date\n";
+    for(var i = 0; i < members.length; i++) {
+      var m = members[i];
+      csv += '"' + m.fname + '","' + m.lname + '","' + m.email + '","' + m.phone + '","' + m.address + '","' + m.role + '","' + m.joinDate + '"\n';
+    }
+    
+    var element = document.createElement("a");
+    element.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(csv));
+    element.setAttribute("download", "church_members.csv");
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    alert("File downloaded!");
+  } catch(err) {
+    alert("Error: " + err);
+  }
+}
+</script>
+
+</body>
+</html>
